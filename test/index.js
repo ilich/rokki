@@ -6,23 +6,19 @@ var assert = require("assert"),
 
 describe("Malware Scanner", function () {
     
-    function notFound(expectedFile, file, infected, data) {
-        assert.strictEqual(file, expectedFile);
-        assert.strictEqual(infected, null);
-        assert.strictEqual(data, "File is not found");
+    function checkErrorMessage(msg) {
+        return function (expectedFile, file, infected, data) {
+            assert.strictEqual(file, expectedFile);
+            assert.strictEqual(infected, null);
+            assert.strictEqual(data, msg);
+        }
     }
     
-    function excluded(expectedFile, file, infected, data) {
-        assert.strictEqual(file, expectedFile);
-        assert.strictEqual(infected, null);
-        assert.strictEqual(data, "Excluded");
-    }
-    
-    function tooBig(expectedFile, file, infected, data) {
-        assert.strictEqual(file, expectedFile);
-        assert.strictEqual(infected, null);
-        assert.strictEqual(data, "File is too big");
-    }
+    var notFound = checkErrorMessage("File is not found"),
+        folderNotFound = checkErrorMessage("Folder is not found"),
+        useFileInstedOfFolder = checkErrorMessage("Folder should be provided"),
+        excluded = checkErrorMessage("Excluded"),
+        tooBig = checkErrorMessage("File is too big");
     
     function malware(expectedFile, file, infected, data) {
         assert.strictEqual(file, expectedFile);
@@ -37,6 +33,22 @@ describe("Malware Scanner", function () {
         assert.strictEqual(data, null);
     }
     
+    function scanFolder(scanner, folder, expectedMalware, done) {
+        scanner.scanFolder(folder, function (file, infected, data) {
+            if (!infected) {
+                return;
+            }
+            
+            var idx = expectedMalware.indexOf(file);
+            if (idx > -1) {
+                expectedMalware.splice(idx, 1);
+            }
+            
+            if (expectedMalware == 0) {
+                done();
+            }
+        });
+    }
     
     var scanner = new rokki.Scanner();
     var testFolder = path.join(__dirname, "data");
@@ -153,4 +165,40 @@ describe("Malware Scanner", function () {
         });
     });
     
+    it("scan missing folder", function (done) {
+       var target = path.join(testFolder, "missing-folder");
+       
+       scanner.scanFolder(target, function (file, infected, data) {
+            folderNotFound(target, file, infected, data);
+            done();
+        });
+    });
+    
+    it("scan folder, but use file as a parameter", function (done) {
+       var target = path.join(testFolder, "big.txt");
+       
+       scanner.scanFolder(target, function (file, infected, data) {
+            useFileInstedOfFolder(target, file, infected, data);
+            done();
+        });
+    });
+    
+    it("scan folder", function (done) {
+       scanFolder(scanner, testFolder, [
+           path.join(testFolder, "bad.asp"),
+           path.join(testFolder, "bad.php"),
+           path.join(testFolder, "fatal.php"),
+       ], done);
+    });
+    
+    it("scan folder recursively", function (done) {
+        var scanner = new rokki.Scanner({ recursive: true });
+        
+        scanFolder(scanner, testFolder, [
+            path.join(testFolder, "bad.asp"),
+            path.join(testFolder, "bad.php"),
+            path.join(testFolder, "fatal.php"),
+            path.join(testFolder, "subfolder", "bad.cfm"),
+        ], done);
+    });
 });

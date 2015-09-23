@@ -14,14 +14,14 @@ function Scanner(options) {
     this.options = options || {
         maxSize: null,
         include: null,
-        exclude: null
+        exclude: null,
+        recursive: false
     };
 }
 
 Scanner.prototype.scan = function (file, callback) {
     if (!util.isFunction(callback)) {
-        callback = function (path, infected, data) {
-        }; 
+        throw new Error("Callback has not been provided");
     }
     
     var filename = path.basename(file).toLowerCase();
@@ -81,6 +81,43 @@ Scanner.prototype.scan = function (file, callback) {
                 
                 callback(file, false, null);    
             });            
+        });
+    });
+};
+
+Scanner.prototype.scanFolder = function (folder, callback) {
+    if (!util.isFunction(callback)) {
+        throw new Error("Callback has not been provided");
+    }
+    
+    var self = this;
+    
+    fs.exists(folder, function (exists) {
+        if (!exists) {
+            return callback(folder, null, "Folder is not found");
+        }
+        
+        fs.stat(folder, function (err, stats) {
+            if (!stats.isDirectory()) {
+                return callback(folder, null, "Folder should be provided");
+            }
+            
+            fs.readdir(folder, function (err, files) {
+                if (err) {
+                    return callback(folder, null, err);
+                }
+                
+                for (var i = 0; i < files.length; i++) {
+                    var target = path.join(folder, files[i]);
+                    var fileInfo = fs.statSync(target);
+                    
+                    if (fileInfo.isDirectory() && self.options.recursive) {
+                        self.scanFolder(target, callback);
+                    } else if (fileInfo.isFile()) {
+                        self.scan(target, callback);
+                    }
+                }
+            }); 
         });
     });
 };
