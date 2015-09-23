@@ -73,7 +73,8 @@ Scanner.prototype.scan = function (file, callback) {
                         return callback(file, true, {
                             check: TEST.RE,
                             malware: signature.type,
-                            impact: signature.impact
+                            impact: signature.impact,
+                            id: signature.id
                         });
                     }
                 }

@@ -117,6 +117,7 @@ describe("Malware Scanner", function () {
         var target = path.join(testFolder, "bad.asp");
         
         scanner.scan(target, function (file, infected, data) {
+            assert.strictEqual(data.id, 10);
             assert.strictEqual(data.check, rokki.TEST.RE);
             malware(target, file, infected, data);
             done();
@@ -127,6 +128,7 @@ describe("Malware Scanner", function () {
         var target = path.join(testFolder, "bad.php");
         
         scanner.scan(target, function (file, infected, data) {
+            assert.strictEqual(data.id, 13);
             assert.strictEqual(data.check, rokki.TEST.RE);
             malware(target, file, infected, data);
             done();
