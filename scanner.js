@@ -15,7 +15,9 @@ function Scanner(options) {
         maxSize: null,
         include: null,
         exclude: null,
-        recursive: false
+        recursive: false,
+        includeFolders: null,
+        excludeFolders: null
     };
 }
 
@@ -100,6 +102,18 @@ Scanner.prototype.scanFolder = function (folder, callback) {
         fs.stat(folder, function (err, stats) {
             if (!stats.isDirectory()) {
                 return callback(folder, null, "Folder should be provided");
+            }
+            
+            // Verify include/exclude folders
+            folder = fs.realpathSync(folder);
+            var name = path.basename(folder);
+            
+            if (util.isRegExp(self.options.excludeFolders) && self.options.excludeFolders.test(name)) {
+                return callback(folder, null, "Excluded folder");
+            }
+            
+            if (util.isRegExp(self.options.includeFolders) && !self.options.includeFolders.test(name)) {
+                return callback(folder, null, "Excluded folder");
             }
             
             fs.readdir(folder, function (err, files) {

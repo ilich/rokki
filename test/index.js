@@ -201,4 +201,35 @@ describe("Malware Scanner", function () {
             path.join(testFolder, "subfolder", "bad.cfm"),
         ], done);
     });
+    
+    it("exclude folder - exclude pattern", function (done) {
+        var excludedFolder = path.join(testFolder, "excluded");
+        
+        var scanner = new rokki.Scanner({ 
+            recursive: true,
+            includeFolders: /[d|s|e]+/ig,
+            excludeFolders: /excluded/ig 
+        });
+        
+        scanner.scanFolder(testFolder, function (file, infected, data) {
+            if (file === excludedFolder && data === "Excluded folder") {
+                done();
+            }
+        });
+    });
+    
+    it("exclude folder - include pattern", function (done) {
+        var excludedFolder = path.join(testFolder, "excluded");
+        
+        var scanner = new rokki.Scanner({ 
+            recursive: true,
+            includeFolders: /^[d|s]+/ig,
+        });
+        
+        scanner.scanFolder(testFolder, function (file, infected, data) {
+            if (file === excludedFolder && data === "Excluded folder") {
+                done();
+            }
+        });
+    });
 });
