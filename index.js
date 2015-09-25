@@ -1,14 +1,134 @@
 "use strict";
 
-var signatures = require("./signatures"),
-    scanner = require("./scanner");
-
-function main() {
-    // TODO
-}
+var util = require("util"),
+    fs = require("fs"),
+    winston = require("winston"),
+    signatures = require("./signatures"),
+    scanner = require("./scanner"),
+    program = require("commander");
+    
+var tool = (function() {
+    
+    function main() {
+        program
+            .version("0.1.0")
+            .description("Simple web-sites malware scanner.")
+            .usage("[options] [file/directory]")
+            .option("-v, --verbose", "Be verbose.")
+            .option("-l, --log <file>", "Save scan report to #file.")
+            .option("-r, --recursive", "Scan directories recursively. All the subdirectories in the given directory will be scanned.")
+            .option("--exclude <regex>", "Don't scan file names matching regular expression.")
+            .option("--exclude-dir <regex>", "Don't scan directory names matching regular expression.")
+            .option("--include <regex>", "Only scan file matching regular expression.")
+            .option("--include-dir <regex>", "Only scan directory matching regular expression.")
+            .option("--max-filesize <n>", "Scan files with size at most #n kilobytes (default: 100 MB)", 102400)
+            .parse(process.argv);
+            
+        var options = configureScanner();
+        var logger = configureLogger();
+        var target = getTarget();
+        
+        var scan = new scanner.Scanner(options);
+        scan.scanFolder(target, function (file, infected, data) {
+            if (!infected) {
+                logger.log("verbose", file + " - OK");
+            } else {
+                var level, malware = "", msg;
+                
+                switch (data.impact) {
+                    case signatures.IMPACT_LEVEL.HIGH:
+                        level = "error";
+                        break;
+                        
+                    case signatures.IMPACT_LEVEL.MEDIUM:
+                        level = "warn";
+                        break;
+                    
+                    default:
+                        level = "info";
+                        break;
+                }
+                
+                switch (data.malware) {
+                    case signatures.MALWARE_TYPE.WEB_SHELL:
+                        malware = "Web Shell";
+                        break;
+                        
+                    case signatures.MALWARE_TYPE.VIRUS:
+                        malware = "Virus";
+                        break;
+                        
+                    case signatures.MALWARE_TYPE.MALICIOUS_CODE:
+                        malware = "Malicious Code";
+                        break;
+                }
+                
+                if (data.check === scanner.TEST.PATH) {
+                    msg = util.format("%s - %s (filename)", file, malware);
+                } else {
+                    msg = util.format("%s - %s, ID: %d (regular expression)", file, malware, data.id);
+                }
+                
+                logger.log(level, msg);
+            }
+        });
+    }
+    
+    function getTarget() {
+        return program.args.length === 0 ? "./" : program.args[0];
+    }
+    
+    function configureScanner() {
+        var maxSize = parseInt(program.maxFilesize) * 1024;
+        
+        var options = {
+            maxSize: maxSize === 0 ? 104857600 : maxSize,
+            include: util.isString(program.include) ? new RegExp(program.include, "ig") : null,
+            exclude: util.isString(program.exclude) ? new RegExp(program.exclude, "ig") : null,
+            recursive: program.recursive === true,
+            includeFolders: util.isString(program.includeDir) ? new RegExp(program.includeDir, "ig") : null,
+            excludeFolders: util.isString(program.excludeDir) ? new RegExp(program.excludeDir, "ig") : null,
+        };
+        
+        return options;        
+    }
+    
+    function configureLogger() {
+        var level = program.verbose === true ? "verbose" : "info";
+        
+        var logger = new winston.Logger({
+            transports: [
+                new winston.transports.Console({
+                    level: level,
+                    handleExceptions: true,
+                    json: false,
+                    colorize: true                    
+                })
+            ]            
+        });
+        
+        if (!util.isString(program.log)) {
+            return logger;
+        }
+        
+        logger.add(winston.transports.File, {
+            level: level,
+            filename: program.log,
+            handleExceptions: true,
+            json: false
+        });
+                
+        return logger;
+    }
+    
+    return {
+        start: main
+    };
+    
+})();
 
 if (require.main === module) {
-    main();    
+    tool.start();    
 } else {
     module.exports = {
         Scanner: scanner.Scanner,

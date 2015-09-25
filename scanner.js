@@ -12,7 +12,7 @@ var TEST = {
 
 function Scanner(options) {
     this.options = options || {
-        maxSize: null,
+        maxSize: 104857600,     // 100 MB
         include: null,
         exclude: null,
         recursive: false,
@@ -48,6 +48,10 @@ Scanner.prototype.scan = function (file, callback) {
         fs.stat(file, function (err, stats) {
             if (err) {
                 return callback(file, null, err);
+            }
+            
+            if (!stats.isFile()) {
+                return callback(file, null, "File should be provided");
             }
             
             if (util.isNumber(self.options.maxSize) &&  stats.size > self.options.maxSize) {
@@ -101,7 +105,7 @@ Scanner.prototype.scanFolder = function (folder, callback) {
         
         fs.stat(folder, function (err, stats) {
             if (!stats.isDirectory()) {
-                return callback(folder, null, "Folder should be provided");
+                return self.scan(folder, callback);
             }
             
             // Verify include/exclude folders

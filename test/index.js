@@ -16,7 +16,7 @@ describe("Malware Scanner", function () {
     
     var notFound = checkErrorMessage("File is not found"),
         folderNotFound = checkErrorMessage("Folder is not found"),
-        useFileInstedOfFolder = checkErrorMessage("Folder should be provided"),
+        useFolderInstedOfFile = checkErrorMessage("File should be provided"),
         excluded = checkErrorMessage("Excluded"),
         tooBig = checkErrorMessage("File is too big");
     
@@ -52,6 +52,13 @@ describe("Malware Scanner", function () {
     
     var scanner = new rokki.Scanner();
     var testFolder = path.join(__dirname, "data");
+    
+    it("try to scan folder with scan method", function (done) {
+        scanner.scan(testFolder, function (file, infected, data) {
+            useFolderInstedOfFile(testFolder, file, infected, data);
+            done();
+        });
+    });
     
     it("try to scan missing file", function (done) {
         var target = path.join(testFolder, "missing.txt");
@@ -175,10 +182,10 @@ describe("Malware Scanner", function () {
     });
     
     it("scan folder, but use file as a parameter", function (done) {
-       var target = path.join(testFolder, "big.txt");
+       var target = path.join(testFolder, "good.asp");
        
        scanner.scanFolder(target, function (file, infected, data) {
-            useFileInstedOfFolder(target, file, infected, data);
+            cleanFile(target, file, infected, data);
             done();
         });
     });
