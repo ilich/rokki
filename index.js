@@ -66,7 +66,7 @@ var tool = (function() {
                 if (data.check === scanner.TEST.PATH) {
                     msg = util.format("%s - %s (filename)", file, malware);
                 } else {
-                    msg = util.format("%s - %s, ID: %d (regular expression)", file, malware, data.id);
+                    msg = util.format("%s - %s, ID: %d (regular expression: %s)", file, malware, data.id, data.regex);
                 }
                 
                 logger.log(level, msg);

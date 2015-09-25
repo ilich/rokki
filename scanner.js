@@ -80,7 +80,8 @@ Scanner.prototype.scan = function (file, callback) {
                             check: TEST.RE,
                             malware: signature.type,
                             impact: signature.impact,
-                            id: signature.id
+                            id: signature.id,
+                            regex: signature.expr
                         });
                     }
                 }
