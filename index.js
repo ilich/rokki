@@ -15,8 +15,9 @@ var tool = (function() {
             .description("Simple web-sites malware scanner.")
             .usage("[options] [file/directory]")
             .option("-v, --verbose", "Be verbose.")
-            .option("-l, --log <file>", "Save scan report to #file.")
             .option("-r, --recursive", "Scan directories recursively. All the subdirectories in the given directory will be scanned.")
+            .option("-l, --log <file>", "Save scan report to #file.")
+            .option("--json", "Save scan report in JSON format.")
             .option("--exclude <regex>", "Don't scan file names matching regular expression.")
             .option("--exclude-dir <regex>", "Don't scan directory names matching regular expression.")
             .option("--include <regex>", "Only scan file matching regular expression.")
@@ -115,7 +116,7 @@ var tool = (function() {
             level: level,
             filename: program.log,
             handleExceptions: true,
-            json: false
+            json: program.json === true
         });
                 
         return logger;
