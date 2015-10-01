@@ -6,6 +6,10 @@
   "scripts": {
     "test": "mocha"
   },
+  "bin": {
+      "rokki": "index.js"
+  },
+  "preferGlobal": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ilich/rokki.git"
