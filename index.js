@@ -31,7 +31,10 @@ var tool = (function() {
         
         var scan = new scanner.Scanner(options);
         scan.scanFolder(target, function (file, infected, data) {
-            if (!infected) {
+            if (infected === null) {
+                logger.log("error", data);
+            }
+            else if (infected === false) {
                 logger.log("verbose", file + " - OK");
             } else {
                 var level, malware = "", msg;
