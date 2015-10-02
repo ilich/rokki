@@ -68,9 +68,16 @@ Scanner.prototype.scan = function (file, callback) {
             }
             
             // Check file content
-            fs.readFile(file, "utf8", function (err, data) {
+            var processFile = function (err, data) {
                 if (err) {
-                    return callback(file, null, err);
+                    if (err.code === "EMFILE") {
+                        // Too many files open. Try to reread the file in a second.
+                        setTimeout(function () {
+                           fs.readFile(file, "utf8", processFile); 
+                        }, 1000);
+                    } else {
+                        return callback(file, null, err);    
+                    }
                 }
                 
                 for (var i = 0; i < signatures.db.re.length; i++) {
@@ -86,8 +93,10 @@ Scanner.prototype.scan = function (file, callback) {
                     }
                 }
                 
-                callback(file, false, null);    
-            });            
+                callback(file, false, null); 
+            };
+            
+            fs.readFile(file, "utf8", processFile);            
         });
     });
 };
