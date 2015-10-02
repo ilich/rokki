@@ -7,7 +7,8 @@ var util = require("util"),
     winston = require("winston"),
     signatures = require("./signatures"),
     scanner = require("./scanner"),
-    program = require("commander");
+    commander = require("commander"),
+    program = new commander.Command("rokki");
     
 var tool = (function() {
     
