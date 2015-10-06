@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ilich/rokki.svg?branch=master)](https://travis-ci.org/ilich/rokki)
 
-Rokki is a simple websites malware scanner insiped by [Manul Antimalware Tool](https://github.com/antimalware/manul/). The tool has been developed to help system administrators to find malware in websites without a need to install PHP on the server.
+Rokki is a simple web-sites malware scanner inspired by [Manul Antimalware Tool](https://github.com/antimalware/manul/). The tool has been developed to help system administrators to find malware in websites without a need to install PHP on the server.
 
 ## Installation
 
