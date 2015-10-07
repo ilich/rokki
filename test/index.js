@@ -251,7 +251,7 @@ describe("Whitelist", function () {
     it ("calculate SHA1 checksum", function (done) {
         var target = path.join(testFolder, "big.txt");
         whitelist.checksum(target, function (err, sha1) {
-            assert.strictEqual(sha1, "fe2c101fdd66574d37943c5b1fd5e1512f9b3d08"); 
+            assert.strictEqual(sha1, "56e6f70b11c1fa123a4d7e0f4be0fa7674edbd0f"); 
             done();
         });
     });
@@ -261,7 +261,7 @@ describe("Whitelist", function () {
         whitelist.updateFile(target, "Test", function (err, file, sha1) {
             assert.strictEqual(err, null);
             assert.strictEqual(file, target);
-            assert.strictEqual(sha1, "fe2c101fdd66574d37943c5b1fd5e1512f9b3d08");
+            assert.strictEqual(sha1, "56e6f70b11c1fa123a4d7e0f4be0fa7674edbd0f");
             done();
         });
     });
