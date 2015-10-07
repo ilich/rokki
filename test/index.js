@@ -2,7 +2,10 @@
 
 var assert = require("assert"),
     path = require("path"),
-    rokki = require(".."); 
+    rokki = require(".."),
+    Whitelist = require("../whitelist");
+
+var testFolder = path.join(__dirname, "data");
 
 describe("Malware Scanner", function () {
     
@@ -51,7 +54,6 @@ describe("Malware Scanner", function () {
     }
     
     var scanner = new rokki.Scanner();
-    var testFolder = path.join(__dirname, "data");
     
     it("try to scan folder with scan method", function (done) {
         scanner.scan(testFolder, function (file, infected, data) {
@@ -239,4 +241,39 @@ describe("Malware Scanner", function () {
             }
         });
     });
+    
+});
+
+describe("Whitelist", function () {
+    
+    var whitelist = new Whitelist();
+    
+    it ("calculate SHA1 checksum", function (done) {
+        var target = path.join(testFolder, "big.txt");
+        whitelist.checksum(target, function (err, sha1) {
+            assert.strictEqual(sha1, "fe2c101fdd66574d37943c5b1fd5e1512f9b3d08"); 
+            done();
+        });
+    });
+    
+    it ("update database - add a file", function (done) {
+        var target = path.join(testFolder, "big.txt");
+        whitelist.updateFile(target, "Test", function (err, file, sha1) {
+            assert.strictEqual(err, null);
+            assert.strictEqual(file, target);
+            assert.strictEqual(sha1, "fe2c101fdd66574d37943c5b1fd5e1512f9b3d08");
+            done();
+        });
+    });
+    
+    it ("update database - add missing file", function (done) {
+        var target = path.join(testFolder, "missing.txt");
+        whitelist.updateFile(target, "Test", function (err, file, sha1) {
+            assert.notStrictEqual(err, null);
+            assert.strictEqual(file, null);
+            assert.strictEqual(sha1, null);
+            done();
+        });
+    });
+    
 });

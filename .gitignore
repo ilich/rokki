@@ -28,3 +28,6 @@ node_modules
 
 #Visual Studion Code typings
 typings
+
+#SQLite databases (used for whitelists testing)
+*.sqlite
