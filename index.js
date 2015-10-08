@@ -7,6 +7,7 @@ var util = require("util"),
     winston = require("winston"),
     signatures = require("./signatures"),
     scanner = require("./scanner"),
+    Whitelist = require("./whitelist"),
     commander = require("commander"),
     program = new commander.Command("rokki");
     
@@ -26,21 +27,53 @@ var tool = (function() {
             .option("--include <regex>", "only scan file matching regular expression.")
             .option("--include-dir <regex>", "only scan directory matching regular expression.")
             .option("--max-filesize <n>", "scan files with size at most #n kilobytes (default: 100 MB)", 102400)
-            .parse(process.argv);
-            
+            .option("--update-whitelist", "add files signatures to the whitelist database provided by --whitelist parameter")
+            .option("-w, --whitelist <file>", "use whitelist database to minimize false positive results", false)
+            .option("-p, --product <name>", "provide product information added to the whitelist database")
+        
+        program.on("--help", function () {
+            console.log("EXAMPLES:\n"); 
+            console.log("Check all files in /var/www/htdocs folder\n");
+            console.log("    $ rokki -r /var/www/htdocs\n");
+            console.log("Check only JavaScript in /var/www/htdocs folder and show the list of all checked files\n");
+            console.log("    $ rokki -r -v --include \\.js$ /var/www/htdocs");
+            console.log("Add wordpress to whitelist\n");
+            console.log("    $ rokki --update-whitelist -w ./whitelist.sqlite -p \"WordPress 4.3.1\" ./temp/wordpress");
+            console.log("Check all files in /var/www/htdocs folder using whitelist\n");
+            console.log("    $ rokki -r -w ./whitelist.sqlite /var/www/htdocs\n");
+        });
+        
+        program.parse(process.argv);
+        
+        if (program.updateWhitelist) {
+            updateWhitelist();
+        } else {
+            scan();
+        }        
+    }
+    
+    function scan() {
         var options = configureScanner();
         var logger = configureLogger();
         var target = getTarget();
         
         var scan = new scanner.Scanner(options);
         scan.scanFolder(target, function (file, infected, data) {
+            var msg;
+            
             if (infected === null) {
-                logger.log("error", data);
+                if (util.isString(file) && file.length > 0) {
+                    msg = util.format("%s - %s", file, data);    
+                } else {
+                    msg = data;
+                }
+                
+                logger.log("error", msg);
             }
             else if (infected === false) {
                 logger.log("verbose", file + " - OK");
             } else {
-                var level, malware = "", msg;
+                var level, malware = "";
                 
                 switch (data.impact) {
                     case signatures.IMPACT_LEVEL.HIGH:
@@ -79,6 +112,10 @@ var tool = (function() {
                 logger.log(level, msg);
             }
         });
+    }
+    
+    function updateWhitelist() {
+        // TODO
     }
     
     function getTarget() {
