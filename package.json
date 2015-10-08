@@ -1,6 +1,6 @@
 {
   "name": "rokki",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Simple web-sites malware scanner",
   "main": "index.js",
   "scripts": {

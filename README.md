@@ -25,6 +25,27 @@ Run `npm install -g rokki` in your terminal
 * `--include <regex>` - only scan file matching regular expression.
 * `--include-dir <regex>` - only scan directory matching regular expression.
 * `--max-filesize <n>` - scan files with size at most #n kilobytes (default: 100 MB)
+* `-w, --whitelist <file> - use whitelist database to minimize false positive results`
+* `-p, --product <name> - provide product information added to the whitelist database`
+* `--update-whitelist - add files signatures to the whitelist database provided by --whitelist parameter`
+
+**Examples**
+
+Check all files in /var/www/htdocs folder.
+
+`$ rokki -r /var/www/htdocs`
+
+Check only JavaScript in /var/www/htdocs folder and show the list of all checked files.
+
+`$ rokki -r -v --include \.js$ /var/www/htdocs`
+
+Add WordPress to whitelist.
+
+`$ rokki --update-whitelist -w ./whitelist.sqlite -p \"WordPress 4.3.1\" ./temp/wordpress`
+
+Check all files in /var/www/htdocs folder using whitelist.
+
+`$ rokki -r -w ./whitelist.sqlite /var/www/htdocs`
 
 ## Warning
 

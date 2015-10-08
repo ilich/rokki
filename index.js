@@ -27,9 +27,9 @@ var tool = (function() {
             .option("--include <regex>", "only scan file matching regular expression.")
             .option("--include-dir <regex>", "only scan directory matching regular expression.")
             .option("--max-filesize <n>", "scan files with size at most #n kilobytes (default: 100 MB)", 102400)
-            .option("--update-whitelist", "add files signatures to the whitelist database provided by --whitelist parameter")
             .option("-w, --whitelist <file>", "use whitelist database to minimize false positive results", "")
-            .option("-p, --product <name>", "provide product information added to the whitelist database", "");
+            .option("-p, --product <name>", "provide product information added to the whitelist database", "")
+            .option("--update-whitelist", "add files signatures to the whitelist database provided by --whitelist parameter");
         
         program.on("--help", function () {
             console.log("EXAMPLES:\n"); 
@@ -37,7 +37,7 @@ var tool = (function() {
             console.log("    $ rokki -r /var/www/htdocs\n");
             console.log("Check only JavaScript in /var/www/htdocs folder and show the list of all checked files\n");
             console.log("    $ rokki -r -v --include \\.js$ /var/www/htdocs");
-            console.log("Add wordpress to whitelist\n");
+            console.log("Add WordPress to whitelist\n");
             console.log("    $ rokki --update-whitelist -w ./whitelist.sqlite -p \"WordPress 4.3.1\" ./temp/wordpress");
             console.log("Check all files in /var/www/htdocs folder using whitelist\n");
             console.log("    $ rokki -r -w ./whitelist.sqlite /var/www/htdocs\n");
