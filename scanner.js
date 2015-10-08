@@ -91,6 +91,8 @@ Scanner.prototype.scan = function (file, callback) {
                             callback(file, null, result);
                         }    
                     });
+                    
+                    return;
                 }
                 
             }
@@ -108,41 +110,47 @@ Scanner.prototype.scan = function (file, callback) {
                     }
                 }
                 
+                var foundSignature = null;
                 for (var i = 0; i < signatures.db.re.length; i++) {
                     var signature = signatures.db.re[i];
                     if (signature.expr.test(data)) {
-                        if (self.whitelist === null) {
-                            return callback(file, true, {
-                                check: TEST.RE,
-                                malware: signature.type,
-                                impact: signature.impact,
-                                id: signature.id,
-                                regex: signature.expr
-                            });
-                        } else {
-                             // Check is file is in the whitelist
-                            self.whitelist.isFileInWhitelist(file, function (result, filename, product) {
-                                if (util.isBoolean(result)) {
-                                    if (result) {
-                                        callback(file, "Whitelist", null); 
-                                    } else {
-                                        callback(file, true, {
-                                            check: TEST.RE,
-                                            malware: signature.type,
-                                            impact: signature.impact,
-                                            id: signature.id,
-                                            regex: signature.expr
-                                        });
-                                    }
-                                } else {
-                                    callback(file, null, result);
-                                }    
-                            });
-                        }
+                        foundSignature = signature;
+                        break;
                     }
                 }
                 
-                callback(file, false, null); 
+                if (foundSignature === null) {
+                    callback(file, false, null);
+                } else {
+                    if (self.whitelist === null) {
+                        callback(file, true, {
+                            check: TEST.RE,
+                            malware: signature.type,
+                            impact: signature.impact,
+                            id: signature.id,
+                            regex: signature.expr
+                        });
+                    } else {
+                            // Check is file is in the whitelist
+                        self.whitelist.isFileInWhitelist(file, function (result, filename, product) {
+                            if (util.isBoolean(result)) {
+                                if (result) {
+                                    callback(file, "Whitelist", null); 
+                                } else {
+                                    callback(file, true, {
+                                        check: TEST.RE,
+                                        malware: signature.type,
+                                        impact: signature.impact,
+                                        id: signature.id,
+                                        regex: signature.expr
+                                    });
+                                }
+                            } else {
+                                callback(file, null, result);
+                            }    
+                        });
+                    }
+                }
             };
             
             fs.readFile(file, "utf8", processFile);            

@@ -53,17 +53,32 @@ Whitelist.prototype.checksum = function (file, callback) {
             return;
         }
         
-        var hash = crypto.createHash("sha1");
-        var stream = fs.createReadStream(file);
+        var calculateChecksum = function () {
+            var hash = crypto.createHash("sha1");
+            var stream = fs.createReadStream(file);
+            
+            stream.on("error", function (err) {
+                if (util.isError(err) && err.code === "EMFILE") {
+                    // Too many files open. Try to reread the file in a second.
+                    setTimeout(function () {
+                        calculateChecksum(); 
+                    }, 1000);
+                } else {
+                    throw err;
+                }
+            });
+            
+            stream.on("data", function (data) {
+                hash.update(data); 
+            });
+            
+            stream.on("end", function () {
+                var sha1 = hash.digest("hex");
+                callback(null, sha1);
+            });
+        };
         
-        stream.on("data", function (data) {
-            hash.update(data); 
-        });
-        
-        stream.on("end", function () {
-            var sha1 = hash.digest("hex");
-            callback(null, sha1);
-        });
+        calculateChecksum();            
     });
 };
 
