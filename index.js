@@ -29,7 +29,7 @@ var tool = (function() {
             .option("--max-filesize <n>", "scan files with size at most #n kilobytes (default: 100 MB)", 102400)
             .option("--update-whitelist", "add files signatures to the whitelist database provided by --whitelist parameter")
             .option("-w, --whitelist <file>", "use whitelist database to minimize false positive results", false)
-            .option("-p, --product <name>", "provide product information added to the whitelist database")
+            .option("-p, --product <name>", "provide product information added to the whitelist database", "");
         
         program.on("--help", function () {
             console.log("EXAMPLES:\n"); 
@@ -115,7 +115,24 @@ var tool = (function() {
     }
     
     function updateWhitelist() {
-        // TODO
+        var logger = configureLogger();
+        var db = program.whitelist;
+        var product = program.product;
+        var target = getTarget();
+        
+        if (!util.isString(db) || db.length === 0) {
+            logger.error("whitelist database file is required");
+            return;
+        }
+        
+        var whitelist = new Whitelist(db);
+        whitelist.update(target, product, function (err, file, sha1) {
+            if (err === null) {
+                logger.info(file + " - " + sha1);
+            } else {
+                logger.error(err);
+            }
+        });
     }
     
     function getTarget() {
