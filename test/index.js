@@ -276,4 +276,30 @@ describe("Whitelist", function () {
         });
     });
     
+    it ("file is in whitelist", function (done) {
+        var target = path.join(testFolder, "subfolder");
+        whitelist.update(target, "Test", function (err, file, sha1) {
+            assert.strictEqual(err, null);
+            whitelist.isInWhitelist(sha1, function (result, filename, product) {
+                assert.strictEqual(true, result);
+                assert.strictEqual(filename, file);
+                assert.strictEqual(product, "Test");
+                done(); 
+            });
+        });
+    });
+    
+    it ("file is not in whitelist", function (done) {
+        var target = path.join(testFolder, "subfolder");
+        whitelist.update(target, "Test", function (err, file, sha1) {
+            assert.strictEqual(err, null);
+            whitelist.isInWhitelist("caa8c02a9b471a486466ec6368b349db3fa84984", function (result, filename, product) {
+                assert.strictEqual(false, result);
+                assert.strictEqual(filename, null);
+                assert.strictEqual(product, null);
+                done(); 
+            });
+        });
+    });
+    
 });

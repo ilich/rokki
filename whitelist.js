@@ -124,6 +124,24 @@ Whitelist.prototype.updateFile = function (filename, product, callback) {
             }
         });     
     });
-}
+};
+
+Whitelist.prototype.isInWhitelist = function (checksum, callback) {
+    if (!util.isFunction(callback)) {
+        throw new Error("Callback has not been provided");
+    }
+    
+    var self = this;
+    
+    self.db.serialize(function () {
+        self.db.get("select filename, product from Whitelist where checksum = ?", checksum, function (err, row) {
+            if (typeof row === "undefined") {
+                callback(false, null, null);
+            } else {
+                callback(true, row.filename, row.product);
+            }
+        });
+    });
+};
 
 module.exports = Whitelist;
