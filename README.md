@@ -41,7 +41,7 @@ Check only JavaScript in /var/www/htdocs folder and show the list of all checked
 
 Add WordPress to whitelist.
 
-`$ rokki --update-whitelist -w ./whitelist.sqlite -p \"WordPress 4.3.1\" ./temp/wordpress`
+`$ rokki --update-whitelist -w ./whitelist.sqlite -p "WordPress 4.3.1" ./temp/wordpress`
 
 Check all files in /var/www/htdocs folder using whitelist.
 
