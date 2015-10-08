@@ -3,6 +3,7 @@
 var util = require("util"),
     crypto = require("crypto"),
     fs = require("fs"),
+    path = require("path"),
     sqlite3 = require("sqlite3");
 
 function Whitelist(dbFilename, logger) {
@@ -61,30 +62,43 @@ Whitelist.prototype.checksum = function (file, callback) {
         
         stream.on("end", function () {
             var sha1 = hash.digest("hex");
-            if (util.isFunction(callback)) {
-                callback(null, sha1);
-            }
+            callback(null, sha1);
         });
     });
 };
 
-Whitelist.prototype.update = function (path, product, callback) {
-    if (!util.isFunction(callback)) {
-        throw new Error("Callback has not been provided");
-    }
-    
+Whitelist.prototype.update = function (folder, product, callback) {
     var self = this;
     
-    fs.stat(path, function (err, stats) {
+    fs.stat(folder, function (err, stats) {
+        if (err !== null) {
+            return callback(err, null, null);
+        }
+        
         if (stats.isFile()) {
-            self.updateFile(path, callback);
+            self.updateFile(folder, callback);
         } else {
-            // TODO
+            fs.readdir(folder, function (err, files) {
+                if (err) {
+                    return callback(err, null, null);
+                }
+                
+                for (var i = 0; i < files.length; i++) {
+                    var target = path.join(folder, files[i]);
+                    var fileInfo = fs.statSync(target);
+                    
+                    if (fileInfo.isDirectory()) {
+                        self.update(target, product, callback);
+                    } else if (fileInfo.isFile()) {
+                        self.updateFile(target, product, callback);
+                    }
+                }    
+            });            
         }
     });  
 };
 
-Whitelist.prototype.updateFile = function (path, product, callback) {
+Whitelist.prototype.updateFile = function (filename, product, callback) {
     if (!util.isFunction(callback)) {
         throw new Error("Callback has not been provided");
     }
@@ -92,20 +106,21 @@ Whitelist.prototype.updateFile = function (path, product, callback) {
     var self = this;
     
     self.db.serialize(function () {
-        self.checksum(path, function (err, sha1) {
+        self.checksum(filename, function (err, sha1) {
             if (err) {
                 callback(err, null, null);
             } else {
                 self.db.run(
                     "insert into Whitelist (checksum, filename, product) values(?, ?, ?)"
-                    , [ sha1, path, product ]
+                    , [ sha1, filename, product ]
                     , function (err) {
                         if (err) {
                             callback(err, null, null);
                         } else {
-                            callback(null, path, sha1);
+                            callback(null, filename, sha1);
                         }
-                    });
+                    }
+                );
             }
         });     
     });
