@@ -289,6 +289,19 @@ describe("Whitelist", function () {
         });
     });
     
+    it ("file is in whitelist using file path", function (done) {
+        var target = path.join(testFolder, "subfolder");
+        whitelist.update(target, "Test", function (err, file, sha1) {
+            assert.strictEqual(err, null);
+            whitelist.isFileInWhitelist(file, function (result, filename, product) {
+                assert.strictEqual(true, result);
+                assert.strictEqual(filename, file);
+                assert.strictEqual(product, "Test");
+                done(); 
+            });
+        });
+    });
+    
     it ("file is not in whitelist", function (done) {
         var target = path.join(testFolder, "subfolder");
         whitelist.update(target, "Test", function (err, file, sha1) {

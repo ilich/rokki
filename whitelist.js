@@ -135,10 +135,35 @@ Whitelist.prototype.isInWhitelist = function (checksum, callback) {
     
     self.db.serialize(function () {
         self.db.get("select filename, product from Whitelist where checksum = ?", checksum, function (err, row) {
+            if (err) {
+                return callback(err, null, null);    
+            }
+            
             if (typeof row === "undefined") {
                 callback(false, null, null);
             } else {
                 callback(true, row.filename, row.product);
+            }
+        });
+    });
+};
+
+Whitelist.prototype.isFileInWhitelist = function (file, callback) {
+    if (!util.isFunction(callback)) {
+        throw new Error("Callback has not been provided");
+    }
+    
+    var self = this;
+    self.checksum(file, function (err, sha1) {
+        if (err) {
+            return callback(err, null, null);    
+        }
+        
+        self.isInWhitelist(sha1, function (result, filename, product) {
+            if (err) {
+                callback(err, null, null);    
+            } else {
+                callback(result, filename, product);
             }
         });
     });

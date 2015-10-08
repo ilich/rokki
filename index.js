@@ -28,7 +28,7 @@ var tool = (function() {
             .option("--include-dir <regex>", "only scan directory matching regular expression.")
             .option("--max-filesize <n>", "scan files with size at most #n kilobytes (default: 100 MB)", 102400)
             .option("--update-whitelist", "add files signatures to the whitelist database provided by --whitelist parameter")
-            .option("-w, --whitelist <file>", "use whitelist database to minimize false positive results", false)
+            .option("-w, --whitelist <file>", "use whitelist database to minimize false positive results", "")
             .option("-p, --product <name>", "provide product information added to the whitelist database", "");
         
         program.on("--help", function () {
@@ -72,6 +72,8 @@ var tool = (function() {
             }
             else if (infected === false) {
                 logger.log("verbose", file + " - OK");
+            } else if (infected === "Whitelist") {
+                logger.log("verbose", file + " - Whitelist");
             } else {
                 var level, malware = "";
                 
@@ -149,6 +151,7 @@ var tool = (function() {
             recursive: program.recursive === true,
             includeFolders: util.isString(program.includeDir) ? new RegExp(program.includeDir, "ig") : null,
             excludeFolders: util.isString(program.excludeDir) ? new RegExp(program.excludeDir, "ig") : null,
+            whitelist: program.whitelist
         };
         
         return options;        

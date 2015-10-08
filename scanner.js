@@ -3,7 +3,8 @@
 var path = require("path"),
     fs = require("fs"),
     util = require("util"),
-    signatures = require("./signatures");
+    signatures = require("./signatures"),
+    Whitelist = require("./whitelist");
 
 var TEST = {
     RE: 0,
@@ -17,8 +18,15 @@ function Scanner(options) {
         exclude: null,
         recursive: false,
         includeFolders: null,
-        excludeFolders: null
+        excludeFolders: null,
+        whitelist: null
     };
+    
+    if (util.isString(this.options.whitelist) && this.options.whitelist.length > 0) {
+        this.whitelist = new Whitelist(this.options.whitelist);
+    } else {
+        this.whitelist = null;
+    }
 }
 
 Scanner.prototype.scan = function (file, callback) {
@@ -60,11 +68,31 @@ Scanner.prototype.scan = function (file, callback) {
             
             // Test malware filenames database
             if (signatures.db.path.indexOf(filename) > -1) {
-                return callback(file, true, {
-                    check: TEST.PATH,
-                    malware: signatures.MALWARE_TYPE.WEB_SHELL,
-                    impact: signatures.IMPACT_LEVEL.HIGH
-                });
+                if (self.whitelist === null) {
+                    return callback(file, true, {
+                        check: TEST.PATH,
+                        malware: signatures.MALWARE_TYPE.WEB_SHELL,
+                        impact: signatures.IMPACT_LEVEL.HIGH
+                    });    
+                } else {
+                    // Check is file is in the whitelist
+                    self.whitelist.isFileInWhitelist(file, function (result, filename, product) {
+                        if (util.isBoolean(result)) {
+                            if (result) {
+                                callback(file, "Whitelist", null); 
+                            } else {
+                                callback(file, true, {
+                                    check: TEST.PATH,
+                                    malware: signatures.MALWARE_TYPE.WEB_SHELL,
+                                    impact: signatures.IMPACT_LEVEL.HIGH
+                                });
+                            }
+                        } else {
+                            callback(file, null, result);
+                        }    
+                    });
+                }
+                
             }
             
             // Check file content
@@ -83,13 +111,34 @@ Scanner.prototype.scan = function (file, callback) {
                 for (var i = 0; i < signatures.db.re.length; i++) {
                     var signature = signatures.db.re[i];
                     if (signature.expr.test(data)) {
-                        return callback(file, true, {
-                            check: TEST.RE,
-                            malware: signature.type,
-                            impact: signature.impact,
-                            id: signature.id,
-                            regex: signature.expr
-                        });
+                        if (self.whitelist === null) {
+                            return callback(file, true, {
+                                check: TEST.RE,
+                                malware: signature.type,
+                                impact: signature.impact,
+                                id: signature.id,
+                                regex: signature.expr
+                            });
+                        } else {
+                             // Check is file is in the whitelist
+                            self.whitelist.isFileInWhitelist(file, function (result, filename, product) {
+                                if (util.isBoolean(result)) {
+                                    if (result) {
+                                        callback(file, "Whitelist", null); 
+                                    } else {
+                                        callback(file, true, {
+                                            check: TEST.RE,
+                                            malware: signature.type,
+                                            impact: signature.impact,
+                                            id: signature.id,
+                                            regex: signature.expr
+                                        });
+                                    }
+                                } else {
+                                    callback(file, null, result);
+                                }    
+                            });
+                        }
                     }
                 }
                 
